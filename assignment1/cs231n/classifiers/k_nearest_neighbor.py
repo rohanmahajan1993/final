@@ -65,7 +65,7 @@ class KNearestNeighbor(object):
     dists = np.zeros((num_test, num_train))
     for i in range(num_test):
       for j in range(num_train):
-          distance_matrix = (num_test[i] - num_train[j]
+          distance_matrix = (X[i] - self.X_train[j])
           distance_matrix_squared = distance_matrix * distance_matrix
           distance = np.sum(distance_matrix_squared)
           dists[i][j] = distance ** 0.5 
@@ -82,7 +82,7 @@ class KNearestNeighbor(object):
     num_train = self.X_train.shape[0]
     dists = np.zeros((num_test, num_train))
     for i in range(num_test):
-          distance_matrix = num_test[i] - num_train
+          distance_matrix = X[i] - self.X_train
           distance_matrix_squared = distance_matrix * distance_matrix
           distance = np.sum(distance_matrix_squared, axis = 1)
           dists[i] = distance ** 0.5 
@@ -98,12 +98,12 @@ class KNearestNeighbor(object):
     """
     num_test = X.shape[0]
     num_train = self.X_train.shape[0]
-    dists = np.zeros((num_test, num_train)) 
-    for i in range(num_test):
-          distance_matrix = num_test[i] - num_train
-          distance_matrix_squared = distance_matrix * distance_matrix
-          distance = np.sum(distance_matrix_squared, axis = 1)
-          dists[i] = distance ** 0.5 
+    ## key realization is use (x-y)^2 = x^2 - y^2 + 2xy
+    test_squared = X * X
+    train_squared = self.X_train * self.X_train
+    train_difference = X.dot(self.X_train.T)
+    distance = np.sum(test_squared, axis=1).reshape(num_test,1) + np.sum(train_squared, axis=1) - 2 * train_difference
+    dists = distance ** 0.5
     return dists
 
   def predict_labels(self, dists, k=1):
@@ -124,9 +124,9 @@ class KNearestNeighbor(object):
     for i in range(num_test):
       # A list of length k storing the labels of the k nearest neighbors to
       # the ith test point.
-      neihbors = np.argsort(dists[i])[:k]
-      y_labels = np.array([self.y.train[neighbor] for neighbor in neighbors]) 
-      label_freuencies = np.bin_count[y_labels]
+      neighbors = np.argsort(dists[i])[:k]
+      y_labels = np.array([self.y_train[neighbor] for neighbor in neighbors]) 
+      label_frequencies = np.bincount(y_labels)
       y_pred[i] = np.argmax(label_frequencies)                       
     return y_pred
 
