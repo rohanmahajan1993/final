@@ -66,9 +66,14 @@ def svm_loss_vectorized(W, X, y, reg):
   print (example_class.shape, real_class_value.shape)
   differences = example_class - real_class_value +1
   are_positive = differences > 0
+  num_problems = np.sum(are_positive, axis=1) - 1
+  for index, y_value in enumerate(y):
+      are_positive[index, y_value] = -num_problems[index]                  
+  dW = np.dot(X.T, are_positive)
   positive_numbers = differences * are_positive
   loss = np.sum(positive_numbers)
   loss -= num_train  ##the class is in included i.e. we don't handle i!=j so we must account for it now; each of these example will have loss of 1
+  
   loss /= num_train
   loss += reg * np.sum(W * W)  
   dW /= num_train  
